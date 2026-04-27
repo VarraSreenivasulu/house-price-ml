@@ -103,6 +103,9 @@ def predict():
             * max(0.65, 1 - prop_age * 0.008)
             * (1 + (bhk - 2) * 0.08)
         ) / 100000
+      @app.route("/health")
+def health():
+    return "OK", 200
 
         return jsonify({'ml_prediction': ml_pred,
                         'rule_based':    round(max(10.0, min(2000.0, estimated)), 2),
