@@ -3,6 +3,7 @@ import pandas as pd, numpy as np, os, json, pickle
 import matplotlib; matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
+from scipy import stats
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.linear_model import LinearRegression
@@ -60,7 +61,59 @@ best_nm = max(res,key=lambda k:res[k]['r2'])
 best_mdl = res[best_nm]['mdl']
 best_pred = res[best_nm]['pred']
 print(f'Best: {best_nm}')
+print(f'Best: {best_nm}')
 
+# ── Z-TEST ──────────────────────────────────────────────────
+# H0: mean prediction error = 0  (model is unbiased)
+# H1: mean prediction error != 0  (two-tailed)
+print('\n--- Z-Test Results ---')
+z_results = {}
+for nm, info in res.items():
+    errors   = yte.values - info['pred']
+    n        = len(errors)
+    mean_err = errors.mean()
+    std_err  = errors.std(ddof=1)
+    se       = std_err / np.sqrt(n)
+    z_stat   = mean_err / se
+    p_value  = 2 * (1 - stats.norm.cdf(abs(z_stat)))
+    ci_low   = mean_err - 1.96 * se
+    ci_high  = mean_err + 1.96 * se
+    reject_h0  = bool(p_value < 0.05)
+    conclusion = ("Reject H0 - significant bias" if reject_h0
+                  else "Fail to reject H0 - no significant bias")
+    z_results[nm] = {
+        'n'             : int(n),
+        'mean_error'    : round(float(mean_err), 4),
+        'std_error'     : round(float(std_err),  4),
+        'standard_error': round(float(se),        6),
+        'z_statistic'   : round(float(z_stat),    4),
+        'p_value'       : round(float(p_value),   6),
+        'ci_95'         : [round(float(ci_low), 4), round(float(ci_high), 4)],
+        'reject_h0'     : reject_h0,
+        'conclusion'    : conclusion,
+    }
+    print(f'{nm}: Z={z_stat:.4f}  p={p_value:.6f}  => {conclusion}')
+
+# Z-test error distribution chart
+best_errors = yte.values - best_pred
+fig, ax = plt.subplots(figsize=(8, 5))
+ax.hist(best_errors, bins=60, color='#4361ee', edgecolor='white', alpha=0.80, density=True)
+xmin, xmax = ax.get_xlim()
+x = np.linspace(xmin, xmax, 300)
+mu, sigma = best_errors.mean(), best_errors.std()
+ax.plot(x, stats.norm.pdf(x, mu, sigma), 'r-', lw=2, label=f'Normal fit  mean={mu:.2f}')
+ax.axvline(0, color='k', ls='--', lw=1.5, label='Zero bias line')
+ax.set_xlabel('Prediction Error (Actual - Predicted, Lakhs)')
+ax.set_ylabel('Density')
+ax.set_title(f'Z-Test: Error Distribution — {best_nm}')
+ax.legend()
+fig.tight_layout()
+fig.savefig(f'{OUT}/ztest_error_dist.png')
+plt.close()
+print('Z-test chart saved')
+
+with open('/home/claude/house_project/model.pkl','wb') as f:
+    pickle.dump({'model':best_mdl,'encoders':encoders,'features':features},f)
 with open('/home/claude/house_project/model.pkl','wb') as f:
     pickle.dump({'model':best_mdl,'encoders':encoders,'features':features},f)
 
@@ -135,6 +188,8 @@ print('Chart 9 done')
 
 metrics = {nm:{k:v for k,v in r.items() if k not in ('pred','mdl')} for nm,r in res.items()}
 metrics['best_model']=best_nm
+metrics['best_model']=best_nm
+metrics['z_test'] = z_results    # ← ADD THIS LINE
 metrics['dataset']={'rows':len(df),'cols':df.shape[1]}
 metrics['price_stats']={'min':round(df['Price_in_Lakhs'].min(),2),'max':round(df['Price_in_Lakhs'].max(),2),
     'mean':round(df['Price_in_Lakhs'].mean(),2),'median':round(df['Price_in_Lakhs'].median(),2)}
