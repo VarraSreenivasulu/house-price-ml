@@ -104,7 +104,11 @@ def predict():
             * max(0.65, 1 - prop_age * 0.008)
             * (1 + (bhk - 2) * 0.08)
         ) / 100000
-      @app.route("/health")
+  @app.route('/ztest')
+def ztest():
+    z = metrics.get('z_test', {})
+    return jsonify(z)   
+  @app.route("/health")
 def health():
     return "OK", 200
 
