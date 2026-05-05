@@ -8,12 +8,13 @@ from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from scipy import stats
 
-OUT = '/home/claude/house_project/static'
+OUT = 'static'
 os.makedirs(OUT, exist_ok=True)
 
 print('Loading data...')
-df = pd.read_csv('/mnt/user-data/uploads/pyhouse.csv')
+df = pd.read_csv(r'C:\Users\varra\OneDrive\Desktop\12505512Sreenivasulu(27)\pyhouse.csv')
 print(f'Shape: {df.shape}')
 
 df['Amenity_Count'] = df['Amenities'].str.split(',').str.len()
@@ -44,9 +45,9 @@ print(f'Train={len(Xtr)} Test={len(Xte)}')
 print('Training Linear Regression...')
 lr = LinearRegression(); lr.fit(Xtr,ytr); lp = lr.predict(Xte)
 print('Training Random Forest...')
-rf = RandomForestRegressor(100,random_state=42,n_jobs=-1); rf.fit(Xtr,ytr); rp = rf.predict(Xte)
+rf = RandomForestRegressor(n_estimators=100,random_state=42,n_jobs=-1); rf.fit(Xtr,ytr); rp = rf.predict(Xte)
 print('Training Gradient Boosting...')
-gb = GradientBoostingRegressor(100,random_state=42); gb.fit(Xtr,ytr); gp = gb.predict(Xte)
+gb = GradientBoostingRegressor(n_estimators=100,random_state=42); gb.fit(Xtr,ytr); gp = gb.predict(Xte)
 
 res = {}
 for nm,pred,mdl in [('Linear Regression',lp,lr),('Random Forest',rp,rf),('Gradient Boosting',gp,gb)]:
@@ -61,7 +62,50 @@ best_mdl = res[best_nm]['mdl']
 best_pred = res[best_nm]['pred']
 print(f'Best: {best_nm}')
 
-with open('/home/claude/house_project/model.pkl','wb') as f:
+# ─── Z-TEST: Are residuals significantly different from zero? ────────────────
+print('\n--- Z-Test (One-Sample) on Best Model Residuals ---')
+best_residuals = yte.values - best_pred
+pop_mean = 0  # Null hypothesis: mean residual = 0 (perfect unbiased model)
+
+n = len(best_residuals)
+sample_mean = np.mean(best_residuals)
+sample_std  = np.std(best_residuals, ddof=1)
+standard_error = sample_std / np.sqrt(n)
+
+# Z-statistic (valid for large n; here n>>30)
+z_stat = (sample_mean - pop_mean) / standard_error
+
+# Two-tailed p-value using normal distribution
+p_value = 2 * (1 - stats.norm.cdf(abs(z_stat)))
+
+print(f'  Sample size       : {n}')
+print(f'  Sample mean residual : {sample_mean:.4f} Lakhs')
+print(f'  Std deviation     : {sample_std:.4f}')
+print(f'  Standard error    : {standard_error:.4f}')
+print(f'  Z-statistic       : {z_stat:.4f}')
+print(f'  P-value (2-tailed): {p_value:.6f}')
+
+alpha = 0.05
+if p_value < alpha:
+    print(f'  Result: REJECT H0 -- Residuals are significantly different from 0 (p < {alpha})')
+else:
+    print(f'  Result: FAIL TO REJECT H0 -- Residuals are NOT significantly different from 0 (p >= {alpha})')
+
+# Store Z-test results for the JSON metrics
+ztest_results = {
+    'model': best_nm,
+    'n': n,
+    'sample_mean_residual': round(float(sample_mean), 4),
+    'std_deviation': round(float(sample_std), 4),
+    'z_statistic': round(float(z_stat), 4),
+    'p_value': round(float(p_value), 6),
+    'alpha': alpha,
+    'reject_h0': bool(p_value < alpha)
+}
+print('--- Z-Test Complete ---\n')
+# ─────────────────────────────────────────────────────────────────────────────
+
+with open('model.pkl','wb') as f:
     pickle.dump({'model':best_mdl,'encoders':encoders,'features':features},f)
 
 sns.set_theme(style='whitegrid')
@@ -147,6 +191,7 @@ metrics['options']={
     'facing':df['Facing'].unique().tolist(),
     'owner':df['Owner_Type'].unique().tolist(),
 }
-with open('/home/claude/house_project/metrics.json','w') as f:
+metrics['ztest'] = ztest_results
+with open('metrics.json','w') as f:
     json.dump(metrics,f)
 print('ALL DONE')

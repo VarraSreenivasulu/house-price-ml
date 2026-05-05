@@ -111,6 +111,9 @@ def predict():
     except Exception as e:
         return jsonify({'error': str(e), 'trace': traceback.format_exc()}), 400
 
+@app.route("/health")
+def health():
+    return "OK", 200
 
 if __name__ == '__main__':
     print("\n" + "="*55)
