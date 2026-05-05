@@ -19,17 +19,32 @@ def format_number(v):
     return f"{int(v):,}"
 
 # Load model & metadata on startup
-with open(os.path.join(BASE, 'model.pkl'), 'rb') as f:
-    payload  = pickle.load(f)
-model    = payload['model']
-encoders = payload['encoders']
-features = payload['features']
+try:
+    with open(os.path.join(BASE, 'model.pkl'), 'rb') as f:
+        payload  = pickle.load(f)
+    model    = payload['model']
+    encoders = payload['encoders']
+    features = payload['features']
+    print('model.pkl loaded OK')
+except Exception as e:
+    print(f'FATAL: Could not load model.pkl: {e}')
+    raise
 
-with open(os.path.join(BASE, 'metrics.json')) as f:
-    metrics = json.load(f)
+try:
+    with open(os.path.join(BASE, 'metrics.json')) as f:
+        metrics = json.load(f)
+    print('metrics.json loaded OK')
+except Exception as e:
+    print(f'FATAL: Could not load metrics.json: {e}')
+    raise
 
-with open(os.path.join(BASE, 'state_city.json')) as f:
-    state_city = json.load(f)
+try:
+    with open(os.path.join(BASE, 'state_city.json')) as f:
+        state_city = json.load(f)
+    print('state_city.json loaded OK')
+except Exception as e:
+    print(f'FATAL: Could not load state_city.json: {e}')
+    raise
 
 
 @app.route('/')
