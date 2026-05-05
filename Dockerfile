@@ -6,8 +6,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-RUN chmod +x entrypoint.sh
-
 EXPOSE 8080
 
-CMD ["./entrypoint.sh"]
+# Use sh -c to expand the PORT environment variable directly, avoiding line-ending issues with entrypoint scripts
+CMD ["sh", "-c", "gunicorn app:app --bind 0.0.0.0:${PORT:-8080} --workers 2 --timeout 120"]
