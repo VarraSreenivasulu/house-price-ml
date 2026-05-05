@@ -179,7 +179,7 @@ ax.tick_params(axis='x',rotation=45)
 fig.tight_layout(); fig.savefig(f'{OUT}/price_by_state.png'); plt.close()
 print('Chart 9 done')
 
-metrics = {nm:{k:v for k,v in r.items() if k not in ('pred','mdl')} for nm,r in res.items()}
+metrics = {'models': {nm:{k:v for k,v in r.items() if k not in ('pred','mdl')} for nm,r in res.items()}}
 metrics['best_model']=best_nm
 metrics['best_model']=best_nm
 metrics['z_test'] = z_results    # ← ADD THIS LINE

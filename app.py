@@ -140,9 +140,9 @@ def health():
 
 if __name__ == '__main__':
     print("\n" + "="*55)
-    print("  🏠  Indian House Price ML Dashboard")
-    print("  📍  Open: http://127.0.0.1:5000")
-    print("  ✅  Press CTRL+C to stop the server")
+    print("  Indian House Price ML Dashboard")
+    print("  Open: http://127.0.0.1:5000")
+    print("  Press CTRL+C to stop the server")
     print("="*55 + "\n")
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=False, host="0.0.0.0", port=port)
