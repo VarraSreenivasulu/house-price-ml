@@ -3,6 +3,7 @@ import pandas as pd, numpy as np, os, json, pickle
 import matplotlib; matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
+from scipy import stats
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.linear_model import LinearRegression
@@ -60,6 +61,7 @@ for nm,pred,mdl in [('Linear Regression',lp,lr),('Random Forest',rp,rf),('Gradie
 best_nm = max(res,key=lambda k:res[k]['r2'])
 best_mdl = res[best_nm]['mdl']
 best_pred = res[best_nm]['pred']
+print(f'Best: {best_nm}')
 print(f'Best: {best_nm}')
 
 # ─── Z-TEST: Are residuals significantly different from zero? ────────────────
@@ -179,6 +181,8 @@ print('Chart 9 done')
 
 metrics = {nm:{k:v for k,v in r.items() if k not in ('pred','mdl')} for nm,r in res.items()}
 metrics['best_model']=best_nm
+metrics['best_model']=best_nm
+metrics['z_test'] = z_results    # ← ADD THIS LINE
 metrics['dataset']={'rows':len(df),'cols':df.shape[1]}
 metrics['price_stats']={'min':round(df['Price_in_Lakhs'].min(),2),'max':round(df['Price_in_Lakhs'].max(),2),
     'mean':round(df['Price_in_Lakhs'].mean(),2),'median':round(df['Price_in_Lakhs'].median(),2)}
