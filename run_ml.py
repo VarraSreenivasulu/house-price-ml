@@ -104,6 +104,21 @@ ztest_results = {
     'alpha': alpha,
     'reject_h0': bool(p_value < alpha)
 }
+
+# Generate Z-test plot
+fig, ax = plt.subplots(figsize=(7, 5))
+x = np.linspace(-4, 4, 500)
+y_norm = stats.norm.pdf(x, 0, 1)
+ax.plot(x, y_norm, color='#4361ee', lw=2, label='Standard Normal (H0)')
+ax.fill_between(x, y_norm, where=(x < -1.96) | (x > 1.96), color='#f72585', alpha=0.3, label='Critical Region (α=0.05)')
+ax.axvline(z_stat, color='#06d6a0', lw=2.5, ls='--', label=f'Z-Statistic ({z_stat:.4f})')
+ax.set_title('Z-Test on Model Residuals')
+ax.set_xlabel('Z-Score')
+ax.set_ylabel('Density')
+ax.legend()
+fig.tight_layout(); fig.savefig(f'{OUT}/ztest_plot.png'); plt.close()
+print('Z-Test Chart done')
+
 print('--- Z-Test Complete ---\n')
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -182,7 +197,7 @@ print('Chart 9 done')
 metrics = {'models': {nm:{k:v for k,v in r.items() if k not in ('pred','mdl')} for nm,r in res.items()}}
 metrics['best_model']=best_nm
 metrics['best_model']=best_nm
-metrics['z_test'] = z_results    # ← ADD THIS LINE
+metrics['z_test'] = ztest_results    # ← ADD THIS LINE
 metrics['dataset']={'rows':len(df),'cols':df.shape[1]}
 metrics['price_stats']={'min':round(df['Price_in_Lakhs'].min(),2),'max':round(df['Price_in_Lakhs'].max(),2),
     'mean':round(df['Price_in_Lakhs'].mean(),2),'median':round(df['Price_in_Lakhs'].median(),2)}
