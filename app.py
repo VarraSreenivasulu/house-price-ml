@@ -10,7 +10,6 @@
 import warnings; warnings.filterwarnings('ignore')
 from flask import Flask, render_template, request, jsonify, send_from_directory
 import pickle, json, numpy as np, os, traceback
-import os
 
 app  = Flask(__name__)
 BASE = os.path.dirname(os.path.abspath(__file__))
@@ -104,13 +103,6 @@ def predict():
             * max(0.65, 1 - prop_age * 0.008)
             * (1 + (bhk - 2) * 0.08)
         ) / 100000
-  @app.route('/ztest')
-def ztest():
-    z = metrics.get('z_test', {})
-    return jsonify(z)   
-  @app.route("/health")
-def health():
-    return "OK", 200
 
         return jsonify({'ml_prediction': ml_pred,
                         'rule_based':    round(max(10.0, min(2000.0, estimated)), 2),
@@ -119,15 +111,23 @@ def health():
     except Exception as e:
         return jsonify({'error': str(e), 'trace': traceback.format_exc()}), 400
 
+
+@app.route('/ztest')
+def ztest():
+    z = metrics.get('ztest', {})
+    return jsonify(z)
+
+
 @app.route("/health")
 def health():
     return "OK", 200
 
+
 if __name__ == '__main__':
     print("\n" + "="*55)
     print("  🏠  Indian House Price ML Dashboard")
-    print("  📍  Open: http://localhost:5000")
+    print("  📍  Open: http://127.0.0.1:5000")
     print("  ✅  Press CTRL+C to stop the server")
     print("="*55 + "\n")
-    
-app.run(debug=True,host="0.0.0.0", port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=False, host="0.0.0.0", port=port)
