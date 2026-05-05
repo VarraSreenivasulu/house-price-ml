@@ -123,9 +123,8 @@ def health():
 if __name__ == '__main__':
     print("\n" + "="*55)
     print("  🏠  Indian House Price ML Dashboard")
-    print("  📍  Open: http://127.0.0.1:5000")
+    print("  📍  Open: http://localhost:5000")
     print("  ✅  Press CTRL+C to stop the server")
     print("="*55 + "\n")
     
-port = int(os.environ.get("PORT", 8080))
-app.run(host="0.0.0.0", port=port)
+app.run(debug=True,host="0.0.0.0", port=5000)
